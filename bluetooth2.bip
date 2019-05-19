@@ -1,0 +1,71 @@
+@cpp(src="ext-cpp/PriorityPackage.cpp",include="PriorityPackage.hpp")
+package bluetooth2
+
+  	extern function bool is_transition_allowed()
+
+	port type Port()
+ 
+	atom type System()
+
+	data int c_meta = 0
+	data int c = 0
+	data int state = 0
+	data int n = 10
+		
+	port Port try()
+	port Port fail()
+	port Port ok()
+	port Port reject()
+	port Port wait()
+	port Port return_from_reject()
+	port Port return_from_ok()
+
+	place s0,s1,s2,s3
+		 
+	initial to s0 do { c = 0; state = 0;}
+		
+	on try
+		from s0 to s1
+		provided ( c >= 0 && c < n && state == 0)
+		delayable
+		do { 
+			c_meta = c;
+			c = c + 1; 
+		}
+	on ok
+		from s1 to s2
+		provided(!is_transition_allowed())
+		delayable
+
+		do { 
+			state = 1; 
+		}
+	on fail
+		from s1 to s0
+		delayable
+	on reject
+		from s0 to s3
+		provided ( c>=n && state == 0 )
+		delayable
+		do { 
+			state = 2; 
+		}
+	on wait
+		from s0 to s0
+		provided ( state != 0)
+		delayable
+	on return_from_reject
+		from s3 to s0
+		delayable
+	on return_from_ok
+		from s2 to s0
+		delayable
+
+	end
+	
+	compound type Compound()
+
+		component System system()
+
+	end
+end
